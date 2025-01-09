@@ -20,7 +20,7 @@ class Reservation():
 
     def requestCaptcha(self, url):
         try:
-            res = self.session.request(method="get", url=url, headers=header, files=file, **{parametric_key: data})
+            res = self.session.request(method="get", url=url, headers=self.header)  # , files=file, **{parametric_key: data}
         except Exception as e:
             raise "请求发送失败：%s" % (e)
 
@@ -83,43 +83,105 @@ class Reservation():
             print("保存图像失败")
         return img
 
+    def sendReserv(self, url, payload):
+        try:
+            res = self.session.request(method="post", url=url, headers=self.header, data=payload)
+        except Exception as e:
+            raise "请求发送失败：%s" % (e)
+
 
 if __name__ == "__main__":
-    url= "https://ehall3.nuaa.edu.cn/site/captcha/click-get"
+
     header = {
-        "user-agent": "Mozilla/5.0 (Linux; Android 13; Mi 10 Build/TKQ1.221114.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/124.0.6367.172 Mobile Safari/537.36 ZhilinEai/3.2 ZhilinNuaaApp AgentWeb/5.0.0  UCBrowser/11.6.4.950",
-        "referer": "https://ehall3.nuaa.edu.cn/v2/reserve/m_reserveDetail?id=18",
-        "Cookie": "eai-sess=fssj1uei30lgl98rj037b4cph5; UUkey=cefdaeaeef431e7601ddfcd350a3044e; PHPSESSID=mmjnfupde0ppc3c2q5dmrt36o6; vjvd=c95d07e3a8ee74d3c1570152cfa2675a; vjuid=352722; ESEb0jRzmT2GS=60K63gKbCjyUa78Zj3f_ZqkNvnlNafzr_AZqBhhJHmY8uxfP5VYv27y2SoVguxUDwJkclTRjbYIAQyH0HSPKlldq; ESEb0jRzmT2GT=0xRU1AwXs7HKfyZ_dvAxSu7vvK.7eCrz8prQsyJNnCc_J8L.v0q5_1NdvaxHL4FsjlESTyjPAMVcgEwzITsZr_wjccUXM6FuwfNAWgWUu30Y5xbKHnidDHzfeiom8nfH3KWcy4dl08xp1GNZpi0dbt0Z1_dJ8L7MMplnQ0YD9yziOWnmYh3oe9pt6rGRetKhbhOYrSvaaJt0mZTcfwgXou2s5CceIAcEv3xEPW8bHt_x8fXy4cw_E7NbQaI0Qis85aBYcgBA3FE_jSjV_60Wy1lRDIEbBFfHkx_mVskUvHVxwxRIokbISMxYMFN.6uj3vzX2NPWcR7QpXMDhbdqRu_uQo2Q630d.IUZTn5zzFrgVpSHolyrT.sefe7nfqO_LT; vt=232857014"
+        "user-agent": "Mozilla/5.0 (Linux; Android 13; Mi 10 Build/TKQ1.221114.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0.6668.100 Mobile Safari/537.36 ZhilinEai/3.3 ZhilinNuaaApp AgentWeb/5.0.0  UCBrowser/11.6.4.950",
+        "referer": "https://ehall3.nuaa.edu.cn/v2/reserve/m_reserveDetail?id=17",
+        "Cookie": "eai-sess=1sjquvtd8rha7c0k7pnei4a9g6; UUkey=b73d45ffa1cc6239c34917b54958d841; PHPSESSID=kad40cgvevl0fjmfmp5g0p1ab2; vjvd=c95d07e3a8ee74d3c1570152cfa2675a; vjuid=352722; vt=251751479"
     }
 
-    reserv = Reservation(url, header)
 
-    responseBody = {
+    # 创建会话
+    reserv = Reservation("https://ehall3.nuaa.edu.cn/site/reservation/launch", header)
+
+    # 请求获取验证码图片
+    reserv.requestCaptcha("https://ehall3.nuaa.edu.cn/site/captcha/click-get")
+    # responseBody = { # 验证码响应体示例
+    #     "e": 0,
+    #     "m": "操作成功",
+    #     "d": {
+    #         "originalImageBase64": "",
+    #         "secretKey": "g1lwhvs011dvly0x",
+    #         "token": "1a4cc4e2-84c7-6088-8c54-8d45c0f2c93d",
+    #         "wordList": [
+    #             "蜡",
+    #             "箍",
+    #             "松",
+    #             "卢"
+    #         ]
+    #     }
+    # }
+
+    resp = {
         "e": 0,
         "m": "操作成功",
         "d": {
             "originalImageBase64": "",
-            "secretKey": "g1lwhvs011dvly0x",
-            "token": "1a4cc4e2-84c7-6088-8c54-8d45c0f2c93d",
+            "secretKey": "ro095kvsr6045m38",
+            "token": "0a13c660-95c1-b49d-8ddb-dc1fb961cd07",
             "wordList": [
-                "蜡",
-                "箍",
-                "松",
-                "卢"
+                "陌",
+                "旱",
+                "豁",
+                "庙"
             ]
         }
     }
 
+
+    # 发送验证码验证坐标请求
+    payload = {
+        "data[captchaType]": "clickWord",
+        "data[pointJson]": "PK9uNvWXhuAIXretztbZJEWkbzsHPr/0q40vg2mRJ8s3Hl0jW4nS3pm3mWyphlaDqgWNvvD4CWTGCwUQHq4dFVR9Vd4KhZguuY6OSucHfgA=",
+        "data[token]": "d7a94245-b55e-3ebe-950b-6a3d26c99c11"
+    }
+    reserv.captchaVerification(self, url, data_type, payload)
+
+
+    # 发送预订场地请求
+    payload = {
+        "resource_id": "17",
+        "code": "",
+        "remarks": "",
+        "deduct_num": "0",
+        "data": "[{\"date\":\"2025-01-05\",\"period\":9354,\"sub_resource_id\":28152}]",
+        "position_data[captchaVerification]": "kwcghAemj00ZHj48m+Vrovqh/qT1KoaZPopweVKer1IGsM8s6DoDYdgvRdHr6CXKaJt4PwnUhlL68zTjyiP4th5yxsiVw/9ls7nsZfwdER0SHRORihQkjZhE6WRnPwWi07habPE4zZwzUjZDsBa6DQ=="
+    }
+    reserv.sendReserv("https://ehall3.nuaa.edu.cn/site/reservation/launch", payload)
+
+
+    
+
+    # 手动点选的坐标
     point = '[{"x":141,"y":110},{"x":223,"y":73},{"x":29,"y":35},{"x":91,"y":57}]' # 需要加密的内容，bytes类型
+    # 加盐secret
     enc = 'vvHulAuGo+14fEB83bgbKfbr+Kijb9SbAtNdXIZBSkRvuoFlEJUAiyBj5ARjrAtDYFdSWw+fCfWSYEFvR2yDAkUrpNk2WXQoh7puYPmHNJ8='
 
-    file_path = 'img_b64.txt'
-    with open(file_path, 'r', encoding='utf-8') as file:
-        file_content = file.read()
-    img = reserv.getImageFromBase64(file_content)
-    img_bit = reserv.normalizeImage(img)
-    cnt = reserv.findContour(img_bit)
-    ret, point = reserv.extractCharContour(img_bit, reserv.aspectRatio(cnt))
-    print(ret)
-    print(point)
+    requestBody = {
+        [
+            {"date":"2025-01-05","period":9354,"sub_resource_id":28152},
+            {"date":"2025-01-05","period":9350,"sub_resource_id":28148},
+            {"date":"2025-01-05","period":9344,"sub_resource_id":28142},
+            {"date":"2025-01-05","period":9347,"sub_resource_id":28197}
+        ]
+    }
+
+    # 读取base64编码文本获取图像
+    # file_path = 'img_b64.txt'
+    # with open(file_path, 'r', encoding='utf-8') as file:
+    #     file_content = file.read()
+    # img = reserv.getImageFromBase64(file_content)
+    # img_bit = reserv.normalizeImage(img)
+    # cnt = reserv.findContour(img_bit)
+    # ret, point = reserv.extractCharContour(img_bit, reserv.aspectRatio(cnt))
+    # print(ret)
+    # print(point)
 
