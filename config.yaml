@@ -1,0 +1,24 @@
+header:
+  user-agent: Mozilla/5.0 (Linux; Android 13; Mi 10 Build/TKQ1.221114.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0.6668.100 Mobile Safari/537.36 ZhilinEai/3.3 ZhilinNuaaApp AgentWeb/5.0.0  UCBrowser/11.6.4.950
+  referer: https://ehall3.nuaa.edu.cn/v2/reserve/m_reserveDetail?id=17
+  Cookie: 
+  - eai-sess=1sjquvtd8rha7c0k7pnei4a9g6; UUkey=b73d45ffa1cc6239c34917b54958d841; PHPSESSID=kad40cgvevl0fjmfmp5g0p1ab2; vjvd=c95d07e3a8ee74d3c1570152cfa2675a; vjuid=352722; vt=251751479
+  - eai-sess=p1pqfi6lqe9ls7vam2acjfhkb6; UUkey=2a73c83fcc76686a835d32266c245c9f; PHPSESSID=3lel00k75run2r1u8v3n283jr7; vjvd=25724049877a0a9fbae11689fcf5ac80; vjuid=352668; vt=252226867
+reservation:
+  resource_id: 17
+  data: 
+    date: "2025-01-11"
+    period: 
+    - 9355
+    - 9356
+    sub_resource_id: 
+    - 28140
+    - 28141
+schedule:
+  use: yes
+  day: null
+  time: "07:00:02"
+retry: yes
+max_tries: 5
+
+
