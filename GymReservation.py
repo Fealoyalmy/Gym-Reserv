@@ -1,19 +1,21 @@
-import requests
-from requests import Session
+
 import json
 import traceback
 import base64
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-from Crypto.Cipher import AES
 import Captcha
 import schedule
 import time
 import yaml
 import os
 import random
+import threading
 from datetime import date
+import requests
+from requests import Session
+from Crypto.Cipher import AES
+from PIL import Image, ImageDraw, ImageFont
 
 
 class Reservation():
@@ -84,18 +86,18 @@ class Reservation():
 
 if __name__ == "__main__":
 
-    def job(header, data):
+    def job(reserv, data):
         # 创建会话
-        reserv = Reservation(header)
-        success = False  # 是否预约成功
+        # reserv = Reservation(header)
         count = 0  # 发送请求的次数
+        userID = reserv.header["Cookie"][9:15]
 
-        while count == 0 or config["retry"] and not success and count < config["max_tries"]:
+        while count == 0 or config["retry"] and count < config["max_tries"]:
             try:
                 # 请求获取验证码图片
                 response = json.loads(reserv.requestCaptcha().text)
-                print("获取验证码:")
-                print(response["d"]["wordList"], response["d"]["secretKey"], response["d"]["token"])
+                print(userID + ":", "获取验证码:")
+                print(userID + ":", response["d"]["wordList"], response["d"]["secretKey"], response["d"]["token"])
                 file_content = response["d"]["originalImageBase64"]
                 secretKey = response["d"]["secretKey"]
                 token = response["d"]["token"]
@@ -113,7 +115,7 @@ if __name__ == "__main__":
                     for item in result["data"].values()
                 ]
                 point = str(point).replace("'", '"').replace(" ", "")
-                print("识别坐标:", point)
+                print(userID + ":", "识别坐标:", point)
 
                 # 发送验证码验证坐标请求
                 secretKey_bytes = secretKey.encode('utf-8') # 转换密钥为二进制字节码
@@ -122,12 +124,12 @@ if __name__ == "__main__":
                     "data[pointJson]": reserv.encyptData(point, secretKey_bytes),  # "PK9uNvWXhuAIXretztbZJEWkbzsHPr/0q40vg2mRJ8s3Hl0jW4nS3pm3mWyphlaDqgWNvvD4CWTGCwUQHq4dFVR9Vd4KhZguuY6OSucHfgA=",
                     "data[token]": token  # "d7a94245-b55e-3ebe-950b-6a3d26c99c11"
                 }
-                print("验证码坐标请求参数:\n", payload)
+                print(userID + ":", "验证码坐标请求参数:\n", payload)
                 sleep_time = random.uniform(1, 1.5)  # 生成随机延迟时间
-                print("延迟%f秒" % sleep_time)
+                # print("延迟%f秒" % sleep_time)
                 time.sleep(sleep_time) # 延迟发送验证码坐标，避免验证太快
                 captcha_res = reserv.captchaVerification(payload)
-                print(captcha_res.text)
+                print(userID + ":", captcha_res.text)
 
                 # 生成加密后的预约请求坐标数据
                 position_data = reserv.encyptData(token + "---" + point, secretKey_bytes)
@@ -145,25 +147,32 @@ if __name__ == "__main__":
                     "data": str(data).replace("'", '"').replace(" ", ""),  # 乒乓球："[{\"date\":\"2025-01-10\",\"period\":9497,\"sub_resource_id\":29524}]"
                     "position_data[captchaVerification]": position_data  # "kwcghAemj00ZHj48m+Vrovqh/qT1KoaZPopweVKer1IGsM8s6DoDYdgvRdHr6CXKaJt4PwnUhlL68zTjyiP4th5yxsiVw/9ls7nsZfwdER0SHRORihQkjZhE6WRnPwWi07habPE4zZwzUjZDsBa6DQ=="
                 }
-                print("预约信息请求参数:\n", payload)
+                print(userID + ":", "预约信息请求参数:\n", payload)
                 # 发送预订场地请求
                 time.sleep(0.4) # 延迟发送请求，避免验证太快
                 result = reserv.sendReserv(payload)
-                print(result.text)
+                print(userID + ":", result.text)
 
                 # 如果预约失败则换场地重试
                 if json.loads(result.text)["m"] == "操作成功":
-                    success = True
+                    break
                 else:
-                    interval = 13
+                    interval = 13  # 每天有13个场次（时间段）
                     data[0]["sub_resource_id"] += interval  # 选择下一个场地
 
             except Exception as e:
-                print("发生了错误:", e)
-                print(response)
+                print(userID + ":", "发生了错误:", e)
+                print(userID + ":", response)
                 time.sleep(1)
             finally:
                 count += 1
+
+
+    def job_thread(reserv, data):
+        thread = threading.Thread(target=job, args=(reserv, data))
+        thread.daemon = True  # 将线程设为守护线程，这样主程序退出时线程也会退出
+        print(f"启动线程任务，账号：{reserv.header['Cookie'][9:15]}")
+        thread.start()
 
 
     # 读取配置
@@ -171,8 +180,9 @@ if __name__ == "__main__":
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)
     # print(config)
-    for i in range(len(config["reservation"]["data"])):
-        job(config["header"][i], [config["reservation"]["data"][i]])
+    
+    # for i in range(len(config["reservation"]["data"])):
+    #     job(config["header"][i], [config["reservation"]["data"][i]])
 
     # 设置定时任务
     if config["schedule"]["use"]:
@@ -182,17 +192,23 @@ if __name__ == "__main__":
             for i in range(len(config["reservation"]["data"])):
                 header = config["header"][i]
                 data = [config["reservation"]["data"][i]]
-                schedule.every().day.at(config["schedule"]["time"]).do(job, header=header, data=data)
-                print("(%d) 账号%s 创建定时任务: %s  period=%d sub_resource_id=%d" % (i, config["header"][i]["Cookie"][9:15], config["schedule"]["time"],
+                reserv = Reservation(header)
+                # schedule.every().day.at(config["schedule"]["time"]).do(job, header=header, data=data)
+                schedule.every().day.at(config["schedule"]["time"]).do(job_thread, reserv=reserv, data=data)
+                print("(%d) 账号%s 创建定时任务: %s  period=%d sub_resource_id=%d" % (i, header["Cookie"][9:15], config["schedule"]["time"],
                                                             config["reservation"]["data"][i]["period"], 
                                                             config["reservation"]["data"][i]["sub_resource_id"]))
+                # 测试Cookie是否有效
+                response = json.loads(reserv.requestCaptcha().text)
+                print(header["Cookie"][9:15], "Cookie校验:", response['e'], response['m'])
                 # schedule.every().day.at("13:35:59").do(job1)  # 每天 13:35:59 执行
                 # schedule.every().monday.at("09:00").do(job1)  # 每周一 09:00 执行
                 # schedule.every(5).seconds.do(job1)  # 每 5 秒执行一次
+                # schedule.every(5).seconds.do(job_thread, arg=config["header"][i]["Cookie"][9:15])
 
         # 循环运行调度器
         while True:
-            schedule.run_pending()
+            schedule.run_pending() 
             time.sleep(1)  # 避免 CPU 占用过高
 
 

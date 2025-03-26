@@ -70,9 +70,9 @@ def identifyCaptcha(img_base64):
     session = Session()
 
     payload = {
-        "username": "18056639636",
-        "password": "13918149629",
-        # "usertoken": "mfWzYRluZchYGHpbdRmL1W8TZODz15x1GB1gFiD8EM6bcwTsFxIBeZqzTdY3VrpJpLu1LiLeTrBd5J0uu0TdsQ==",
+        # "username": "18056639636",
+        # "password": "123456",
+        "usertoken": "oB+QxJZNhoAvj3KnPevU5fRv1R/0satKpywR7fPsKqVI2/P1EUNiOTWEuVBr+Vjx6JZLztB9fon61lJ2h8sdGA==",
         "b64": img_base64,
         "ID": "31989659",
         "version": "3.1.1"
@@ -85,10 +85,12 @@ def identifyCaptcha(img_base64):
 
 
 if __name__ == "__main__":
-    wordList = ["蜡", "箍", "松", "卢"]
-    transformCaptcha("captcha.png", wordList)
-    # img_base64 = img2base64("output_image.png")
-    # print(img_base64)
+    # wordList = ["蜡", "箍", "松", "卢"]
+    # transformCaptcha("captcha_test.png", wordList)
+    img_base64 = img2base64("output_image.png")
+    with open("img_b64.txt", "w") as file:
+        file.write(img_base64)
+    print(img_base64)
     # identifyCaptcha(img_base64)
     
 
