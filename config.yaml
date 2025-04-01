@@ -14,11 +14,16 @@ reservation:
   - date: "2025-01-11"
     period: 9356
     sub_resource_id: 28141
+captcha:
+  username: "18056639636"
+  password: "mao123456"
+  usertoken: oB+QxJZNhoAvj3KnPevU5fRv1R/0satKpywR7fPsKqVI2/P1EUNiOTWEuVBr+Vjx6JZLztB9fon61lJ2h8sdGA==
+  ID: "31989659"
+  version: 3.1.1
 schedule:
   use: yes
   day: null
   time: "07:00:02"
 retry: yes
-max_tries: 3
-
+max-tries: 3
 

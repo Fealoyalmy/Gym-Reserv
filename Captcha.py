@@ -2,6 +2,8 @@
 from requests import Session
 import base64
 import json
+import yaml
+import os
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 
@@ -69,15 +71,20 @@ def img2base64(img_path):
 def identifyCaptcha(img_base64):
     session = Session()
 
+    # 读取配置
+    config_path = os.getenv("CONFIG_PATH", "config.yaml")
+    with open(config_path, "r") as file:
+        config = yaml.safe_load(file)
+
     payload = {
-        # "username": "18056639636",
-        # "password": "123456",
-        "usertoken": "oB+QxJZNhoAvj3KnPevU5fRv1R/0satKpywR7fPsKqVI2/P1EUNiOTWEuVBr+Vjx6JZLztB9fon61lJ2h8sdGA==",
+        "username": config["captcha"]["username"],
+        "password": config["captcha"]["password"],
+        # "usertoken": config["captcha"]["usertoken"],
         "b64": img_base64,
-        "ID": "31989659",
-        "version": "3.1.1"
+        "ID": config["captcha"]["ID"],
+        "version": config["captcha"]["version"]
     }
-    
+
     res = session.request(method="post", data=payload, url="http://www.fdyscloud.com.cn/tuling/predict")
     print(res.text)
     return json.loads(res.text)
@@ -88,10 +95,10 @@ if __name__ == "__main__":
     # wordList = ["蜡", "箍", "松", "卢"]
     # transformCaptcha("captcha_test.png", wordList)
     img_base64 = img2base64("output_image.png")
-    with open("img_b64.txt", "w") as file:
-        file.write(img_base64)
-    print(img_base64)
-    # identifyCaptcha(img_base64)
+    # with open("img_b64.txt", "w") as file:
+    #     file.write(img_base64)
+    # print(img_base64)
+    identifyCaptcha(img_base64)
     
 
 

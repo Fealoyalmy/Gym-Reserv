@@ -92,7 +92,7 @@ if __name__ == "__main__":
         count = 0  # 发送请求的次数
         userID = reserv.header["Cookie"][9:15]
 
-        while count == 0 or config["retry"] and count < config["max_tries"]:
+        while count == 0 or config["retry"] and count < config["max-tries"]:
             try:
                 # 请求获取验证码图片
                 response = json.loads(reserv.requestCaptcha().text)
